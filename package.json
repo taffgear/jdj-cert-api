@@ -8,6 +8,7 @@
     "express-rate-limit": "^2.11.0",
     "lodash": "^4.17.5",
     "moment": "^2.20.1",
+    "mssql": "^4.1.0",
     "nconf": "^0.10.0"
   }
 }

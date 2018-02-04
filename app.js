@@ -9,6 +9,7 @@ const rateLimit     = require('express-rate-limit');
 const crypto        = require('crypto');
 const moment        = require('moment');
 const nconf         = require('nconf');
+const sql 		      = bb.promisifyAll(require("mssql"));
 
 const handlers      = require('./handlers');
 
@@ -63,8 +64,23 @@ const validate  = (req, res, next) => {
 function get_insts(cnf)
 {
     return bb.props({
-        app     : express()
+        app     : express(),
+        mssql   : getMssqlConn()
+
     });
+}
+
+function getMssqlConn()
+{
+  return sql.connect({
+    user		  : cnf.get('sql:user'),
+    password	: cnf.get('sql:password'),
+    server 		: cnf.get('sql:server'),
+    database	: cnf.get('sql:database')
+  }).then((conn) => {
+    console.log('connected to database: %s', cnf.get('sql:database'));
+    return conn;
+   });
 }
 
 function setup(insts)
