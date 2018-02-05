@@ -96,6 +96,12 @@ function setup(insts)
     insts.app.use(bodyParser.urlencoded({ extended: true }));
     insts.app.use(limiter);
 
+    insts.app.use((req, res, next) => {
+      req.mssql = insts.mssql;
+
+      next();
+    });
+
     insts.app.get("/stock/find/:itemno", validate, handlers.stock.find);
 
     insts.app.use(handlers.error);
