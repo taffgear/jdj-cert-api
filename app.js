@@ -103,6 +103,9 @@ function setup(insts)
     });
 
     insts.app.get("/stock/find/:itemno", validate, handlers.stock.find);
+    insts.app.put("/stock", validate, handlers.stock.update);
+    insts.app.get("/contdoc/find/:itemno", validate, handlers.contdoc.find);
+    insts.app.post("/contdoc", validate, handlers.contdoc.create);
 
     insts.app.use(handlers.error);
 

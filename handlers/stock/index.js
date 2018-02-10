@@ -1,3 +1,4 @@
 module.exports  = {
-    find: require('./find')
+    find: require('./find'),
+    update: require('./update')
 };

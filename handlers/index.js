@@ -1,4 +1,5 @@
 module.exports  = {
     error       : require('./error'),
-    stock       : require('./stock')
+    stock       : require('./stock'),
+    contdoc     : require('./contdoc')
 };
