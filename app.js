@@ -4,6 +4,8 @@ const path          = require('path');
 const bb            = require('bluebird');
 const express       = require("express");
 const basicAuth     = require('express-basic-auth');
+const cors          = require('cors');
+const multer        = require('multer');
 const bodyParser    = require("body-parser");
 const rateLimit     = require('express-rate-limit');
 const crypto        = require('crypto');
@@ -13,7 +15,17 @@ const sql 		      = bb.promisifyAll(require("mssql"));
 
 const handlers      = require('./handlers');
 
-const cnf = nconf.argv().env().file({ file: path.resolve(__dirname + '/config.json') });
+const cnf     = nconf.argv().env().file({ file: path.resolve(__dirname + '/config.json') });
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, cnf.get('watchdir'))
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+})
+
+const upload  = multer({ storage });
 
 get_insts(cnf).then(setup).then(run).catch(console.log);
 
@@ -85,6 +97,12 @@ function getMssqlConn()
 
 function setup(insts)
 {
+    insts.app.use(cors({
+      origin: '*',
+      credentials: true,
+      optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+    }));
+
     if (user && pass) {
         insts.app.use(basicAuth({
             users: { [user]: pass },
@@ -92,12 +110,13 @@ function setup(insts)
         }));
     }
 
-    insts.app.use(bodyParser.json());
+    insts.app.use(bodyParser.json({ limit: '50mb' }));
     insts.app.use(bodyParser.urlencoded({ extended: true }));
     insts.app.use(limiter);
 
     insts.app.use((req, res, next) => {
-      req.mssql = insts.mssql;
+      req.mssql   = insts.mssql;
+      req.upload  = upload;
 
       next();
     });
@@ -106,6 +125,7 @@ function setup(insts)
     insts.app.put("/stock", validate, handlers.stock.update);
     insts.app.get("/contdoc/find/:itemno", validate, handlers.contdoc.find);
     insts.app.post("/contdoc", validate, handlers.contdoc.create);
+    insts.app.post("/files", validate, upload.fields([{ name: "documents" }]), handlers.files.upload);
 
     insts.app.use(handlers.error);
 
