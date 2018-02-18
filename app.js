@@ -133,6 +133,8 @@ function setup(insts)
     insts.app.post("/contdoc", validate, handlers.contdoc.create);
     insts.app.post("/files", validate, upload.fields([{ name: "documents" }]), handlers.files.upload);
     insts.app.get("/logs", validate, handlers.logs);
+    insts.app.get("/settings", validate, handlers.settings.get);
+    insts.app.put("/settings", validate, handlers.settings.update);
 
     insts.app.use(handlers.error);
 
