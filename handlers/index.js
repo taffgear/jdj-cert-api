@@ -2,5 +2,6 @@ module.exports  = {
     error       : require('./error'),
     stock       : require('./stock'),
     contdoc     : require('./contdoc'),
-    files       : require('./files')
+    files       : require('./files'),
+    logs        : require('./logs')
 };

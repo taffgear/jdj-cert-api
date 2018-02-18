@@ -12,6 +12,7 @@ const crypto        = require('crypto');
 const moment        = require('moment');
 const nconf         = require('nconf');
 const sql 		      = bb.promisifyAll(require("mssql"));
+const Redis         = require('ioredis');
 
 const handlers      = require('./handlers');
 
@@ -77,7 +78,8 @@ function get_insts(cnf)
 {
     return bb.props({
         app     : express(),
-        mssql   : getMssqlConn()
+        mssql   : getMssqlConn(),
+        redis   : new Redis()
 
     });
 }
@@ -117,15 +119,20 @@ function setup(insts)
     insts.app.use((req, res, next) => {
       req.mssql   = insts.mssql;
       req.upload  = upload;
+      req.redis   = insts.redis;
 
       next();
     });
 
     insts.app.get("/stock/find/:itemno", validate, handlers.stock.find);
     insts.app.put("/stock", validate, handlers.stock.update);
+    insts.app.get("/stock/approved", validate, handlers.stock.approved);
+    insts.app.get("/stock/unapproved", validate, handlers.stock.unapproved);
+    insts.app.get("/stock/expired", validate, handlers.stock.expired);
     insts.app.get("/contdoc/find/:itemno", validate, handlers.contdoc.find);
     insts.app.post("/contdoc", validate, handlers.contdoc.create);
     insts.app.post("/files", validate, upload.fields([{ name: "documents" }]), handlers.files.upload);
+    insts.app.get("/logs", validate, handlers.logs);
 
     insts.app.use(handlers.error);
 
