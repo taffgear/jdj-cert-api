@@ -135,7 +135,7 @@ function setup(insts)
     insts.app.get("/logs", validate, handlers.logs);
     insts.app.get("/settings", validate, handlers.settings.get);
     insts.app.put("/settings", validate, handlers.settings.update);
-
+    insts.app.post("/csv", validate, handlers.csv);
     insts.app.use(handlers.error);
 
     return insts;
