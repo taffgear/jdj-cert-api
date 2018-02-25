@@ -4,6 +4,5 @@ module.exports  = {
     contdoc     : require('./contdoc'),
     files       : require('./files'),
     logs        : require('./logs'),
-    settings    : require('./settings'),
-    csv         : require('./csv')
+    settings    : require('./settings')
 };

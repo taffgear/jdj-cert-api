@@ -125,6 +125,7 @@ function setup(insts)
     });
 
     insts.app.get("/stock/find/:itemno", validate, handlers.stock.find);
+    insts.app.get("/stock/findin", validate, handlers.stock.findIn);
     insts.app.put("/stock", validate, handlers.stock.update);
     insts.app.get("/stock/approved", validate, handlers.stock.approved);
     insts.app.get("/stock/unapproved", validate, handlers.stock.unapproved);
@@ -135,7 +136,6 @@ function setup(insts)
     insts.app.get("/logs", validate, handlers.logs);
     insts.app.get("/settings", validate, handlers.settings.get);
     insts.app.put("/settings", validate, handlers.settings.update);
-    insts.app.post("/csv", validate, handlers.csv);
     insts.app.use(handlers.error);
 
     return insts;
