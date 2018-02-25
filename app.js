@@ -7,7 +7,6 @@ const basicAuth     = require('express-basic-auth');
 const cors          = require('cors');
 const multer        = require('multer');
 const bodyParser    = require("body-parser");
-const rateLimit     = require('express-rate-limit');
 const crypto        = require('crypto');
 const moment        = require('moment');
 const nconf         = require('nconf');
@@ -30,34 +29,8 @@ const upload  = multer({ storage });
 
 get_insts(cnf).then(setup).then(run).catch(console.log);
 
-const rateLimitOptions = {
-    windowMs    : cnf.get('ratelimit:window') * 1000 || 15*60*1000, // 15 minutes
-    max         : cnf.get('ratelimit:max') || 100, // limit each IP to x requests per windowMs
-    delayMs     : 0, // disable delaying - full speed until the max limit is reached
-    headers     : true,
-    statusCode  : 429,
-    message     : 'Too many requests, please try again later.',
-    handler     : (req, res, next) => {
-        if (rateLimitOptions.headers) {
-            const ts = moment().add(Math.ceil(rateLimitOptions.windowMs / 1000), 'seconds');
-
-            res.setHeader('Retry-After', ts.toString());
-        }
-
-        res.format({
-            html: function(){
-                res.status(rateLimitOptions.statusCode).end(rateLimitOptions.message);
-            },
-            json: function(){
-                res.status(rateLimitOptions.statusCode).json({ message: rateLimitOptions.message });
-            }
-        });
-    }
-};
-
 const user      = cnf.get('auth:username') || null;
 const pass      = cnf.get('auth:password') || null;
-const limiter   = new rateLimit(rateLimitOptions);
 const validate  = (req, res, next) => {
     if (cnf.get('auth:secret')) {
         // get signature.
@@ -114,7 +87,6 @@ function setup(insts)
 
     insts.app.use(bodyParser.json({ limit: '50mb' }));
     insts.app.use(bodyParser.urlencoded({ extended: true }));
-    insts.app.use(limiter);
 
     insts.app.use((req, res, next) => {
       req.mssql   = insts.mssql;
