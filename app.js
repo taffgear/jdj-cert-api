@@ -1,5 +1,6 @@
 "use strict"
 
+const fs            = require('fs');
 const path          = require('path');
 const bb            = require('bluebird');
 const express       = require("express");
@@ -12,20 +13,11 @@ const moment        = require('moment');
 const nconf         = require('nconf');
 const sql 		      = bb.promisifyAll(require("mssql"));
 const Redis         = require('ioredis');
+const get           = require('lodash/get');
 
 const handlers      = require('./handlers');
 
-const cnf     = nconf.argv().env().file({ file: path.resolve(__dirname + '/config.json') });
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, cnf.get('watchdir'))
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  }
-})
-
-const upload  = multer({ storage });
+const cnf           = nconf.argv().env().file({ file: path.resolve(__dirname + '/config.json') });
 
 get_insts(cnf).then(setup).then(run).catch(console.log);
 
@@ -54,6 +46,12 @@ function get_insts(cnf)
         mssql   : getMssqlConn(),
         redis   : new Redis()
 
+    }).tap(insts => {
+        return insts.redis.get('jdj:settings').then(result => {
+          insts.settings = (result ? JSON.parse(result) : {});
+
+          return insts;
+        });
     });
 }
 
@@ -72,6 +70,16 @@ function getMssqlConn()
 
 function setup(insts)
 {
+    const updateSettings = (req, res, next) => {
+        const watchDir = req.body.watch_dir;
+
+        insts.settings.watch_dir = (watchDir.length && watchDir.substr(-1) !== '/' ? watchDir + '/' : watchDir);
+
+        req.body.watch_dir = watchDir;
+
+        next();
+    };
+
     insts.app.use(cors({
       origin: '*',
       credentials: true,
@@ -85,13 +93,30 @@ function setup(insts)
         }));
     }
 
+    const storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        const sWatchDir = get(insts.settings, 'watch_dir');
+
+        if (sWatchDir && fs.existsSync(sWatchDir))
+            cb(null, sWatchDir);
+        else
+          cb(null, cnf.get('watchdir'));
+      },
+      filename: (req, file, cb) => {
+        cb(null, file.originalname);
+      }
+    });
+
+    const upload =  multer({ storage });
+
     insts.app.use(bodyParser.json({ limit: '50mb' }));
     insts.app.use(bodyParser.urlencoded({ extended: true }));
 
     insts.app.use((req, res, next) => {
-      req.mssql   = insts.mssql;
-      req.upload  = upload;
-      req.redis   = insts.redis;
+      req.mssql     = insts.mssql;
+      req.redis     = insts.redis;
+      req.settings  = insts.settings;
+      req.upload    = upload;
 
       next();
     });
@@ -99,15 +124,15 @@ function setup(insts)
     insts.app.get("/stock/find/:itemno", validate, handlers.stock.find);
     insts.app.get("/stock/findin", validate, handlers.stock.findIn);
     insts.app.put("/stock", validate, handlers.stock.update);
-    insts.app.get("/stock/approved", validate, handlers.stock.approved);
-    insts.app.get("/stock/unapproved", validate, handlers.stock.unapproved);
-    insts.app.get("/stock/expired", validate, handlers.stock.expired);
+    insts.app.get("/stock/approved/:limit", validate, handlers.stock.approved);
+    insts.app.get("/stock/unapproved/:limit", validate, handlers.stock.unapproved);
+    insts.app.get("/stock/expired/:limit", validate, handlers.stock.expired);
     insts.app.get("/contdoc/find/:itemno", validate, handlers.contdoc.find);
     insts.app.post("/contdoc", validate, handlers.contdoc.create);
     insts.app.post("/files", validate, upload.fields([{ name: "documents" }]), handlers.files.upload);
     insts.app.get("/logs", validate, handlers.logs);
     insts.app.get("/settings", validate, handlers.settings.get);
-    insts.app.put("/settings", validate, handlers.settings.update);
+    insts.app.put("/settings", validate, updateSettings, handlers.settings.update );
     insts.app.use(handlers.error);
 
     return insts;
