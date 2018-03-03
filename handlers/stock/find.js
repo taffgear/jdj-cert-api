@@ -8,12 +8,10 @@ module.exports = function (req, res, next) {
         .query('SELECT TOP 1 dbo.Stock.RECID, dbo.Stock.ITEMNO, dbo.Stock.PGROUP, dbo.Stock.GRPCODE, dbo.Stock.LASTSER#1, dbo.Stock.PERIOD#1, dbo.Stock.CURRDEPOT, dbo.Stock.DESC#1, dbo.Stock.DESC#2, dbo.Stock.DESC#3, dbo.Stock.PATLASTSER, dbo.Stock.STATUS, dbo.Stock.SERNO FROM dbo.Stock WHERE LOWER(dbo.Stock.ITEMNO) = @itemno')
         .then(result => {
             if (!result || !result.recordset.length)
-              throw new errors.http.NotFound('Could not find stock item with itemno: ' + req.params.itemno);
+              throw new errors.http.NotFound('Geen artikel gevonden met nummer: ' + req.params.itemno);
 
             return res.status(200).send({ success: true, body: result.recordset[0] });
         })
-        .catch(e => {
-					throw new errors.http.NotFound('Could not find stock item with itemno: ' + req.params.itemno);
-				})
+        .catch(next)
       ;
 }
