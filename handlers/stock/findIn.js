@@ -17,6 +17,8 @@ module.exports = function (req, res, next) {
 
             return res.status(200).send({ success: true, body: result.recordset });
         })
-        .catch(next)
+        .catch(e => {
+					return res.status(200).send({ success: false, body: [] });
+				})
       ;
 }
