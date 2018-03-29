@@ -7,7 +7,8 @@ API used for transfering data (SQL) to and from client app (jdj-cert-app) and ba
 https://redis.io/download  
 
 git clone git@github.com:taffgear/jdj-cert-api.git  
-cd jdj-cert-api    
+cd jdj-cert-api
+yarn install      
 nano config.json    
 
 ```
