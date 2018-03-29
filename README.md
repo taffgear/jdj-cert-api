@@ -3,9 +3,12 @@ API used for transfering data (SQL) to and from client app (jdj-cert-app) and ba
 
 ## setup
 
+### Download and install redis
+https://redis.io/download  
+
 git clone git@github.com:taffgear/jdj-cert-api.git  
-cd jdj-cert-api  
-nano config.json  
+cd jdj-cert-api    
+nano config.json    
 
 ```
 {
