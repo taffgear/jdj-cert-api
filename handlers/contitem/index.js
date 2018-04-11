@@ -9,7 +9,10 @@ module.exports = function (req, res, next) {
 				.input('docdate', sql.NVarChar, date)
         .query(`SELECT
 							TOP 1000 [IHDATA].[dbo].[Stock].RECID,
-							[IHDATA].[dbo].[Stock].STATUS, [IHDATA].[dbo].[Stock].ITEMNO,
+							[IHDATA].[dbo].[Stock].STATUS,
+							[IHDATA].[dbo].[Stock].ITEMNO,
+							[IHDATA].[dbo].Stock.PGROUP, 
+							[IHDATA].[dbo].Stock.GRPCODE
 							[IHDATA].[dbo].[CONTDOC].FILENAME,
 							[IHDATA].[dbo].[ContItems].DOCDATE#5,
 							[IHDATA].[dbo].[ContItems].STATUS
