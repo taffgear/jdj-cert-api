@@ -8,13 +8,16 @@ module.exports = function (req, res, next) {
 	const settings 	= req.settings.expired;
 
 	const status = reduce(settings, (acc, status, key) => {
-		if (status.value) acc.push(key);
+		if (status.value) {
+			const parts = key.split('_')
+			acc.push(parts[1]);
+		}
 
 		return acc;
 	}, []).join(',');
 
 	return req.mssql.request()
-			.input('status', sql.NVarChar, status)
+			.input('status', sql.NVarChar, '"' + status + '"')
       .query("SELECT " + (limit && limit > 0 ? "TOP " + limit + " " : "") + "dbo.Stock.RECID, dbo.Stock.ITEMNO, dbo.Stock.PGROUP, dbo.Stock.GRPCODE, dbo.Stock.LASTSER#1, dbo.Stock.PERIOD#1, dbo.Stock.CURRDEPOT, dbo.Stock.DESC#1, dbo.Stock.DESC#2, dbo.Stock.DESC#3 FROM dbo.Stock WHERE DATEADD(DAY, [PERIOD#1], [LASTSER#1]) < GETDATE() AND dbo.Stock.PATTEST = '1' AND dbo.Stock.STATUS IN(@status) ORDER BY LASTSER#1 DESC")
       .then(result => {
           return res.status(200).send({ success: true, body: result.recordset });
