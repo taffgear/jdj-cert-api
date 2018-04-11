@@ -65,6 +65,10 @@ function getMssqlConn()
   }).then((conn) => {
     console.log('connected to database: %s', cnf.get('sql:database'));
     return conn;
+   })
+   .catch(e => {
+     console.log(e);
+     return null;
    });
 }
 
@@ -73,8 +77,11 @@ function setup(insts)
     const updateSettings = (req, res, next) => {
         const watchDir = req.body.watch_dir;
 
-        insts.settings.watch_dir = (watchDir.length && watchDir.substr(-1) !== '/' ? watchDir + '/' : watchDir);
-
+        insts.settings.watch_dir  = (watchDir.length && watchDir.substr(-1) !== '/' ? watchDir + '/' : watchDir);
+        insts.settings.approved   = get(req, 'body.approved', null);
+        insts.settings.unapproved = get(req, 'body.unapproved', null);
+        insts.settings.expired    = get(req, 'body.expired', null);
+        
         req.body.watch_dir = watchDir;
 
         next();
