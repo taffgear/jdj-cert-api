@@ -1,9 +1,12 @@
+const bb        = require('bluebird');
+const sql 		  = bb.promisifyAll(require("mssql"));
 const errors    = require('../../lib/classes/errors');
 
 module.exports = function (req, res, next) {
 		const date = req.params.date;
 
 		return req.mssql.request()
+				.input('docdate', sql.NVarChar, date)
         .query(`SELECT
 							TOP 1000 [IHDATA].[dbo].[Stock].RECID,
 							[IHDATA].[dbo].[Stock].STATUS, [IHDATA].[dbo].[Stock].ITEMNO,
@@ -13,7 +16,7 @@ module.exports = function (req, res, next) {
 						FROM
 							[IHDATA].[dbo].Stock
 						INNER JOIN
-							[IHDATA].[dbo].[ContItems] 
+							[IHDATA].[dbo].[ContItems]
 						ON
 							[IHDATA].[dbo].[Stock].ITEMNO = [IHDATA].[dbo].[ContItems].ITEMNO
 						INNER JOIN
@@ -25,9 +28,9 @@ module.exports = function (req, res, next) {
 						AND
 							[IHDATA].[dbo].[ContItems].STATUS = '1'
 						AND
-							CONVERT(DATE, [IHDATA].[dbo].[ContItems].DOCDATE#5) = "` + date + `"
+							CONVERT(DATE, [IHDATA].[dbo].[ContItems].[DOCDATE#5]) = @docdate
 						ORDER BY
-							[IHDATA].[dbo].[ContItems].DOCDATE#5 DESC`)
+							[IHDATA].[dbo].[ContItems].[DOCDATE#5] DESC`)
         .then(result => {
             return res.status(200).send({ success: true, body: result.recordset });
         })
