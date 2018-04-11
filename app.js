@@ -129,6 +129,7 @@ function setup(insts)
     insts.app.get("/stock/expired/:limit", validate, handlers.stock.expired);
     insts.app.get("/contdoc/find/:itemno", validate, handlers.contdoc.find);
     insts.app.post("/contdoc", validate, handlers.contdoc.create);
+    insts.app.get("/contitem/status/:date", validate, handlers.contitem);
     insts.app.post("/files", validate, upload.fields([{ name: "documents" }]), handlers.files.upload);
     insts.app.get("/logs", validate, handlers.logs);
     insts.app.get("/settings", validate, handlers.settings.get);
