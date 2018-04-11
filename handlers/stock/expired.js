@@ -17,8 +17,8 @@ module.exports = function (req, res, next) {
 	}, []).join(',');
 
 	return req.mssql.request()
-			.input('status', sql.Int, status)
-      .query("SELECT " + (limit && limit > 0 ? "TOP " + limit + " " : "") + "dbo.Stock.RECID, dbo.Stock.ITEMNO, dbo.Stock.PGROUP, dbo.Stock.GRPCODE, dbo.Stock.LASTSER#1, dbo.Stock.PERIOD#1, dbo.Stock.CURRDEPOT, dbo.Stock.DESC#1, dbo.Stock.DESC#2, dbo.Stock.DESC#3 FROM dbo.Stock WHERE DATEADD(DAY, [PERIOD#1], [LASTSER#1]) < GETDATE() AND dbo.Stock.PATTEST = '1' AND dbo.Stock.STATUS IN(@status) ORDER BY LASTSER#1 DESC")
+			.input('status', sql.Int, (status.length ? status : 0))
+      .query("SELECT " + (limit && limit > 0 ? "TOP " + limit + " " : "") + "dbo.Stock.RECID, dbo.Stock.ITEMNO, dbo.Stock.PGROUP, dbo.Stock.GRPCODE, dbo.Stock.LASTSER#1, dbo.Stock.PERIOD#1, dbo.Stock.CURRDEPOT, dbo.Stock.DESC#1, dbo.Stock.DESC#2, dbo.Stock.DESC#3 FROM dbo.Stock WHERE DATEADD(DAY, [PERIOD#1], [LASTSER#1]) < GETDATE() AND dbo.Stock.PATTEST = '1'" + (status.length ? " AND dbo.Stock.STATUS IN(@status)" : "AND dbo.Stock.STATUS = 100") + " ORDER BY LASTSER#1 DESC")
       .then(result => {
           return res.status(200).send({ success: true, body: result.recordset });
       })
