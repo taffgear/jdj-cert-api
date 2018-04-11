@@ -11,8 +11,8 @@ module.exports = function (req, res, next) {
 							TOP 1000 [IHDATA].[dbo].[Stock].RECID,
 							[IHDATA].[dbo].[Stock].STATUS,
 							[IHDATA].[dbo].[Stock].ITEMNO,
-							[IHDATA].[dbo].Stock.PGROUP, 
-							[IHDATA].[dbo].Stock.GRPCODE
+							[IHDATA].[dbo].Stock.PGROUP,
+							[IHDATA].[dbo].Stock.GRPCODE,
 							[IHDATA].[dbo].[CONTDOC].FILENAME,
 							[IHDATA].[dbo].[ContItems].DOCDATE#5,
 							[IHDATA].[dbo].[ContItems].STATUS
