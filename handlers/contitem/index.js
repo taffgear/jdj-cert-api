@@ -29,7 +29,7 @@ module.exports = function (req, res, next) {
 						WHERE
 							[IHDATA].[dbo].[Stock].STATUS = '1'
 						AND
-							[IHDATA].[dbo].[ContItems].STATUS = '2'
+							[IHDATA].[dbo].[ContItems].STATUS = '1'
 						AND
 							CONVERT(DATE, [IHDATA].[dbo].[ContItems].[DOCDATE#5]) = @docdate
 						ORDER BY
