@@ -14,7 +14,7 @@ module.exports = function (req, res, next) {
 							[IHDATA].[dbo].[Stock].PGROUP,
 							[IHDATA].[dbo].[Stock].GRPCODE,
 							[IHDATA].[dbo].[CONTDOC].FILENAME,
-							[IHDATA].[dbo].[ContItems].DOCDATE#5,
+							[IHDATA].[dbo].[ContItems].DOCDATE#2,
 							[IHDATA].[dbo].[ContItems].STATUS
 						FROM
 							[IHDATA].[dbo].Stock
@@ -31,9 +31,9 @@ module.exports = function (req, res, next) {
 						AND
 							[IHDATA].[dbo].[ContItems].STATUS = '1'
 						AND
-							CONVERT(DATE, [IHDATA].[dbo].[ContItems].[DOCDATE#5]) = @docdate
+							CONVERT(DATE, [IHDATA].[dbo].[ContItems].[DOCDATE#2]) = @docdate
 						ORDER BY
-							[IHDATA].[dbo].[ContItems].[DOCDATE#5] DESC`)
+							[IHDATA].[dbo].[ContItems].[DOCDATE#2] DESC`)
         .then(result => {
             return res.status(200).send({ success: true, body: result.recordset });
         })
