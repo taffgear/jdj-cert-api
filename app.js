@@ -50,10 +50,10 @@ function get_insts(cnf)
             if (!db) throw new Error('No default mssql connection defined');
 
             return bb.props({
-                app     : express(),
-                dbpools : reduce(results, (acc, o) => { acc[o.db.name] = o.conn; return acc }, {}),
-                mssql   : db.conn,
-                redis   : new Redis()
+                app         : express(),
+                dbpools     : reduce(results, (acc, o) => { acc[o.db.name] = o.conn; return acc }, {}),
+                mssql       : db.conn,
+                redis       : new Redis()
 
             }).tap(insts => {
                 return insts.redis.get('jdj:settings').then(result => {
@@ -131,11 +131,12 @@ function setup(insts)
     insts.app.use(bodyParser.urlencoded({ extended: true }));
 
     insts.app.use((req, res, next) => {
-      req.mssql     = insts.mssql;
-      req.dbpools   = insts.dbpools;
-      req.redis     = insts.redis;
-      req.settings  = insts.settings;
-      req.upload    = upload;
+      req.mssql         = insts.mssql;
+      req.dbpools       = insts.dbpools;
+      req.redis         = insts.redis;
+      req.settings      = insts.settings;
+      req.upload        = upload;
+      req.jwt_secret    = cnf.get('jwt_secret');
 
       next();
     });
@@ -153,6 +154,9 @@ function setup(insts)
     insts.app.get("/logs", validate, handlers.logs);
     insts.app.get("/settings", validate, handlers.settings.get);
     insts.app.put("/settings", validate, updateSettings, handlers.settings.update );
+
+    insts.app.use('/users', require('./users/users.controller'));
+
     insts.app.use(handlers.error);
 
     return insts;
