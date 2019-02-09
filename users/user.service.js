@@ -20,6 +20,6 @@ function findUser(conn, username, password) {
     return conn.request()
             .input('username', sql.NVarChar, username)
             .input('password', sql.NVarChar, password)
-    .query('SELECT TOP 1 RECORDER AS ID, NAME AS username, LEVEL, SUPERUSER, WINUSERNAME, STATUS, LASTON FROM dbo.Users WHERE NAME = @username AND PASSWORD = @password')
+    .query('SELECT TOP 1 RECORDER AS id, NAME AS username, LEVEL, SUPERUSER, WINUSERNAME, STATUS, LASTON FROM dbo.Users WHERE NAME = @username AND PASSWORD = @password')
     .then(result => result.recordset[0])
 }

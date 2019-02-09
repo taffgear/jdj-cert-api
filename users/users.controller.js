@@ -12,7 +12,7 @@ function authenticate(req, res, next) {
     userService.authenticate(req)
         .then(user => {
             if (user) {
-                let token = jwt.sign({ id: user.ID }, req.jwt_secret, { expiresIn: 86400 });
+                let token = jwt.sign({ id: user.id, username: user.username }, req.jwt_secret, { expiresIn: '24h' });
                 res.status(200).send({ auth: true, token: token, user: user });
             } else {
                  res.status(400).json({ message: 'Username or password is incorrect' });

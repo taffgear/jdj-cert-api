@@ -18,28 +18,11 @@ const reduce        = require('lodash/reduce');
 const find          = require('lodash/find');
 
 const handlers      = require('./handlers');
+const auth          = require('./helpers/auth.middleware.js');
 
 const cnf           = nconf.argv().env().file({ file: path.resolve(__dirname + '/config.json') });
 
 get_insts(cnf).then(setup).then(run).catch(console.log);
-
-const user      = cnf.get('auth:username') || null;
-const pass      = cnf.get('auth:password') || null;
-const validate  = (req, res, next) => {
-    if (cnf.get('auth:secret')) {
-        // get signature.
-        const retrievedSignature = req.headers["x-signature"];
-
-        // recalculate signature.
-        const computedSignature = crypto.createHmac("sha256", cnf.get('auth:secret')).update(JSON.stringify(req.body)).digest("hex");
-
-        // compare signatures.
-        if (computedSignature !== retrievedSignature)
-            return res.status(403).send('X-Signature validation failed.')
-    }
-
-    next();
-};
 
 function get_insts(cnf)
 {
@@ -104,13 +87,6 @@ function setup(insts)
       optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
     }));
 
-    if (user && pass) {
-        insts.app.use(basicAuth({
-            users: { [user]: pass },
-            unauthorizedResponse: 'No valid credentials provided'
-        }));
-    }
-
     const storage = multer.diskStorage({
       destination: (req, file, cb) => {
         const sWatchDir = get(insts.settings, 'watch_dir');
@@ -141,19 +117,19 @@ function setup(insts)
       next();
     });
 
-    insts.app.get("/stock/find/:itemno", validate, handlers.stock.find);
-    insts.app.get("/stock/findin", validate, handlers.stock.findIn);
-    insts.app.put("/stock", validate, handlers.stock.update);
-    insts.app.get("/stock/approved/:limit", validate, handlers.stock.approved);
-    insts.app.get("/stock/unapproved/:limit", validate, handlers.stock.unapproved);
-    insts.app.get("/stock/expired/:limit", validate, handlers.stock.expired);
-    insts.app.get("/contdoc/find/:itemno", validate, handlers.contdoc.find);
-    insts.app.post("/contdoc", validate, handlers.contdoc.create);
-    insts.app.get("/contitem/status/:date", validate, handlers.contitem);
-    insts.app.post("/files", validate, upload.fields([{ name: "documents" }]), handlers.files.upload);
-    insts.app.get("/logs", validate, handlers.logs);
-    insts.app.get("/settings", validate, handlers.settings.get);
-    insts.app.put("/settings", validate, updateSettings, handlers.settings.update );
+    insts.app.get("/stock/find/:itemno", auth.checkToken, handlers.stock.find);
+    insts.app.get("/stock/findin", auth.checkToken, handlers.stock.findIn);
+    insts.app.put("/stock", auth.checkToken, handlers.stock.update);
+    insts.app.get("/stock/approved/:limit", auth.checkToken, handlers.stock.approved);
+    insts.app.get("/stock/unapproved/:limit", auth.checkToken, handlers.stock.unapproved);
+    insts.app.get("/stock/expired/:limit", auth.checkToken, handlers.stock.expired);
+    insts.app.get("/contdoc/find/:itemno", auth.checkToken, handlers.contdoc.find);
+    insts.app.post("/contdoc", auth.checkToken, handlers.contdoc.create);
+    insts.app.get("/contitem/status/:date", auth.checkToken, handlers.contitem);
+    insts.app.post("/files", auth.checkToken, upload.fields([{ name: "documents" }]), handlers.files.upload);
+    insts.app.get("/logs", auth.checkToken, handlers.logs);
+    insts.app.get("/settings", auth.checkToken, handlers.settings.get);
+    insts.app.put("/settings", auth.checkToken, updateSettings, handlers.settings.update );
 
     insts.app.use('/users', require('./users/users.controller'));
 
