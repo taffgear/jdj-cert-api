@@ -11,9 +11,11 @@ const bodyParser    = require("body-parser");
 const crypto        = require('crypto');
 const moment        = require('moment');
 const nconf         = require('nconf');
-const sql 		      = bb.promisifyAll(require("mssql"));
+const sql 		    = bb.promisifyAll(require("mssql"));
 const Redis         = require('ioredis');
 const get           = require('lodash/get');
+const reduce        = require('lodash/reduce');
+const find          = require('lodash/find');
 
 const handlers      = require('./handlers');
 
@@ -41,30 +43,39 @@ const validate  = (req, res, next) => {
 
 function get_insts(cnf)
 {
-    return bb.props({
-        app     : express(),
-        mssql   : getMssqlConn(),
-        redis   : new Redis()
+    return bb.map(cnf.get('sql:databases'), db => getMssqlPool(db.name).then(conn => ({ db, conn })))
+        .then(results => {
+            const db = find(results, { db: { default: true } }, null);
 
-    }).tap(insts => {
-        return insts.redis.get('jdj:settings').then(result => {
-          insts.settings = (result ? JSON.parse(result) : {});
+            if (!db) throw new Error('No default mssql connection defined');
 
-          return insts;
-        });
-    });
+            return bb.props({
+                app     : express(),
+                dbpools : reduce(results, (acc, o) => { acc[o.db.name] = o.conn; return acc }, {}),
+                mssql   : db.conn,
+                redis   : new Redis()
+
+            }).tap(insts => {
+                return insts.redis.get('jdj:settings').then(result => {
+                  insts.settings = (result ? JSON.parse(result) : {});
+
+                  return insts;
+                });
+            });
+        })
+    ;
 }
 
-function getMssqlConn()
+function getMssqlPool(db)
 {
-  return sql.connect({
-    user		  : cnf.get('sql:user'),
-    password	: cnf.get('sql:password'),
-    server 		: cnf.get('sql:server'),
-    database	: cnf.get('sql:database')
-  }).then((conn) => {
-    console.log('connected to database: %s', cnf.get('sql:database'));
-    return conn;
+    return new sql.ConnectionPool({
+      user		: cnf.get('sql:user'),
+      password	: cnf.get('sql:password'),
+      server 	: cnf.get('sql:server'),
+      database	: db
+    }).connect().then((conn) => {
+        console.log('connected to database: %s', db);
+        return conn;
    })
    .catch(e => {
      console.log(e);
@@ -81,7 +92,7 @@ function setup(insts)
         insts.settings.approved   = get(req, 'body.approved', null);
         insts.settings.unapproved = get(req, 'body.unapproved', null);
         insts.settings.expired    = get(req, 'body.expired', null);
-        
+
         req.body.watch_dir = watchDir;
 
         next();
@@ -121,6 +132,7 @@ function setup(insts)
 
     insts.app.use((req, res, next) => {
       req.mssql     = insts.mssql;
+      req.dbpools   = insts.dbpools;
       req.redis     = insts.redis;
       req.settings  = insts.settings;
       req.upload    = upload;
