@@ -6,14 +6,7 @@ function authenticate(req) {
     const username = req.body.username;
     const password = req.body.password;
 
-    return findUser(req.dbpools['IHBASE'], username, password)
-        .then(user => {
-            if (user) {
-                const { password, ...userWithoutPassword } = user;
-                return userWithoutPassword;
-            }
-        })
-    ;
+    return findUser(req.dbpools['IHBASE'], username, password);
 }
 
 function findUser(conn, username, password) {
